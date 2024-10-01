@@ -1,23 +1,59 @@
-import userData from "../userData.json";
-import friends from "../friends.json";
-import transactions from "../transactions.json";
+import { useEffect, useState } from "react";
 
-import Profile from "./Profile/Profile";
-import FriendList from "./FriendList/FriendList"
-import TransactionHistory from "./TransactionHistory/TransactionHistory"
+import Description from "./Description/Description";
+import Feedback from "./Feedback/Feedback";
+import Options from "./Options/Options";
+import Notification from "./Notification/Notification";
 
 const App = () => {
+  const [rating, setRating] = useState(() => {
+    const savedRating = window.localStorage.getItem("saved-rating");
+
+    if (savedRating !== null) {
+      return JSON.parse(savedRating);
+    }
+    return {
+      good: 0,
+      neutral: 0,
+      bad: 0,
+    };
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("saved-rating", JSON.stringify(rating));
+  }, [rating]);
+
+  const totalFeedback = rating.good + rating.neutral + rating.bad;
+  
+  const updateFeedback = (feedbackType) => {
+    if (feedbackType === "good") {
+      setRating({ ...rating, good: rating.good + 1 });
+    }
+    if (feedbackType === "neutral") {
+      setRating({ ...rating, neutral: rating.neutral + 1 });
+    }
+    if (feedbackType === "bad") {
+      setRating({ ...rating, bad: rating.bad + 1 });
+    }
+  };
+  
+  const resetFeedback = () => {
+    setRating({ good: 0, neutral: 0, bad: 0 });
+  };
+
   return (
     <>
-      <Profile
-        name={userData.username}
-        tag={userData.tag}
-        location={userData.location}
-        image={userData.avatar}
-        stats={userData.stats}
+      <Description />
+      <Options
+        updateFeedback={updateFeedback}
+        totalFeedback={totalFeedback}
+        resetFeedback={resetFeedback}
       />
-      <FriendList friends={friends} />
-      <TransactionHistory items={transactions} />
+      {totalFeedback > 0 ? (
+        <Feedback rating={rating} totalFeedback={totalFeedback} />
+      ) : (
+        <Notification />
+      )}
     </>
   );
 };
